@@ -284,8 +284,8 @@ def delete_thread():
             return jsonify({"status": "deleted"})
     return jsonify({"error": "thread not found"}), 404
 
+# Ensure storage is loaded when running under WSGI servers and scripts.
+load_storage()
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-
-# Ensure storage is loaded when running under WSGI servers.
-load_storage()
