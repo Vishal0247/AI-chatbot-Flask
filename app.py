@@ -179,8 +179,20 @@ Always be authentic, warm, and respond to what the user actually says."""
 
         data = response.json()
         
-        # Extract all text from the response (handles multiple parts)
-        parts = data["candidates"][0]["content"]["parts"]
+        # Safe extraction of text from Gemini API response
+        candidates = data.get("candidates", [])
+        if not candidates:
+            prompt_feedback = data.get("promptFeedback", {})
+            if "blockReason" in prompt_feedback:
+                return jsonify({"error": f"Message blocked by safety settings: {prompt_feedback.get('blockReason')}"}), 400
+            return jsonify({"error": "No response generated. Please try again."}), 400
+            
+        candidate = candidates[0]
+        if "content" not in candidate:
+            finish_reason = candidate.get("finishReason", "UNKNOWN")
+            return jsonify({"error": f"Response could not be generated. Reason: {finish_reason}"}), 400
+        
+        parts = candidate["content"].get("parts", [])
         assistant_text = ""
         for part in parts:
             if "text" in part:
